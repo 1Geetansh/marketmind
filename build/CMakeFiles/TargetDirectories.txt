@@ -1,0 +1,3 @@
+/Users/geetansh1/marketmind/build/CMakeFiles/marketmind.dir
+/Users/geetansh1/marketmind/build/CMakeFiles/edit_cache.dir
+/Users/geetansh1/marketmind/build/CMakeFiles/rebuild_cache.dir
