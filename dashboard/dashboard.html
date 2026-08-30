@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketMind — Live Dashboard</title>
+<style>
+  :root{
+    --bg: #0a0e14;
+    --panel: #0f1520;
+    --panel-border: #1c2531;
+    --text: #e6edf3;
+    --dim: #6b7684;
+    --green: #00d9a0;
+    --red: #ff4757;
+    --amber: #ffb84d;
+    --blue: #4d9fff;
+    --purple: #b57dff;
+    --grid: #1a2230;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'JetBrains Mono', Consolas, Menlo, monospace;
+  }
+  .wrap{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap: 10px;
+  }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background: var(--green);
+    display:inline-block;
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; }
+    50%{ opacity:.35; }
+  }
+  .brand h1{
+    font-size: 20px;
+    letter-spacing: 1px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .brand .sub{
+    color: var(--dim);
+    font-size: 12px;
+    letter-spacing: .5px;
+  }
+  .status{
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .status .badge{
+    padding: 3px 9px;
+    border-radius: 3px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+  }
+  .status .badge.live{ color: var(--green); border-color: rgba(0,217,160,.35); }
+  .status .badge.demo{ color: var(--amber); border-color: rgba(255,184,77,.35); }
+
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  button{
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  button:hover{ border-color: var(--blue); }
+  button:active{ transform: translateY(1px); }
+  button.crash{
+    border-color: rgba(255,71,87,.4);
+    color: var(--red);
+  }
+  button.crash:hover{
+    background: rgba(255,71,87,.1);
+    border-color: var(--red);
+  }
+  button.crash:disabled{
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  button.reset{ color: var(--dim); }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  @media(min-width: 900px){
+    .grid{ grid-template-columns: 1.4fr 1fr; }
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 18px 18px 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel h2{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dim);
+    margin: 0 0 14px 0;
+    display:flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .panel h2 .price{
+    color: var(--text);
+    font-size: 22px;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+  .panel h2 .price.up{ color: var(--green); }
+  .panel h2 .price.down{ color: var(--red); }
+
+  canvas{ display:block; width:100%; }
+
+  .bots{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bot-row{
+    display:grid;
+    grid-template-columns: 90px 1fr 90px;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .bot-row .name{ color: var(--dim); }
+  .bot-row .bar-track{
+    height: 18px;
+    background: var(--grid);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bot-row .bar-fill{
+    height: 100%;
+    border-radius: 3px;
+    transition: width .5s ease;
+  }
+  .bot-row .value{ text-align:right; font-weight:600; }
+  .bot-row .value.up{ color: var(--green); }
+  .bot-row .value.down{ color: var(--red); }
+
+  .crash-banner{
+    position: fixed;
+    top: 0; left:0; right:0;
+    background: var(--red);
+    color: #1a0000;
+    text-align:center;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-size: 13px;
+    padding: 10px;
+    transform: translateY(-100%);
+    transition: transform .3s ease;
+    z-index: 50;
+    text-transform: uppercase;
+  }
+  .crash-banner.show{ transform: translateY(0); }
+
+  footer{
+    margin-top: 24px;
+    color: var(--dim);
+    font-size: 11px;
+    line-height: 1.6;
+    border-top: 1px solid var(--panel-border);
+    padding-top: 16px;
+  }
+  footer code{
+    background: var(--grid);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="crash-banner" id="crashBanner">⚠ Market Crash Triggered ⚠</div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <h1>MARKETMIND</h1>
+        <div class="sub">Live Trading Simulation</div>
+      </div>
+    </div>
+    <div class="status">
+      <span id="modeBadge" class="badge demo">Demo data</span>
+      <span id="clock">t = 0s</span>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button class="crash" id="crashBtn">Trigger Crash</button>
+    <button class="reset" id="resetBtn">Reset Simulation</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>
+        <span>Stock Price</span>
+        <span class="price" id="priceLabel">$100.00</span>
+      </h2>
+      <canvas id="priceChart" height="260"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2><span>Bot Portfolio Value</span></h2>
+      <div class="bots" id="botList"></div>
+    </div>
+  </div>
+
+  <footer>
+    This page polls <code>market_data.json</code> once a second. If that file isn't found (e.g. the
+    C++ side isn't writing it yet, or you're not running a local server), it automatically falls back
+    to <strong>demo data</strong> so the dashboard always has something to show. See the comments at the
+    top of <code>dashboard.js</code> logic (bottom of this file's &lt;script&gt;) for the exact JSON
+    format the C++ program should write.
+  </footer>
+</div>
+
+<script>
+/*
+=====================================================================
+ DATA CONTRACT — what the C++ program should write, once per second,
+ to a file named "market_data.json" in the SAME FOLDER as this HTML
+ file (or update the DATA_URL constant below to point elsewhere):
+
+ {
+   "time": 42,                 // seconds elapsed, integer
+   "price": 104.32,            // current stock price
+   "crashed": false,           // true if a crash event is active
+   "bots": [
+     { "name": "MomentumBot", "value": 10432.10 },
+     { "name": "ValueBot",    "value": 9800.55 },
+     { "name": "PanicBot",    "value": 9120.00 },
+     { "name": "RandomBot",   "value": 10210.75 }
+   ]
+ }
+
+ The dashboard keeps its own rolling history of "price" client-side —
+ the C++ side does NOT need to send the whole price history, just the
+ current value each second, and this page builds the chart from that.
+
+ IMPORTANT: opening this HTML file directly (double-click / file://)
+ will usually block the fetch() call due to browser security (CORS).
+ Run a tiny local server from the folder that contains this file and
+ market_data.json, e.g.:
+
+     python3 -m http.server 8000
+
+ then open http://localhost:8000/dashboard.html in your browser.
+=====================================================================
+*/
+
+const DATA_URL = 'market_data.json';
+const POLL_MS = 1000;
+const MAX_HISTORY = 120;
+
+const BOT_COLORS = {
+  MomentumBot: '#4d9fff',
+  ValueBot:    '#00d9a0',
+  PanicBot:    '#ff4757',
+  RandomBot:   '#b57dff',
+};
+const BOT_ORDER = ['MomentumBot', 'ValueBot', 'PanicBot', 'RandomBot'];
+
+let usingLiveData = false;
+let priceHistory = [];
+let time = 0;
+let currentPrice = 100;
+let crashed = false;
+let bots = BOT_ORDER.map(name => ({ name, value: 10000, prevValue: 10000 }));
+
+// ---- demo data generator (used only when market_data.json isn't available) ----
+function stepDemoData() {
+  time += 1;
+
+  // random-walk price, with a temporary shock if a crash was triggered client-side
+  const drift = crashed && time - crashStartTime < 6
+    ? -Math.random() * 6
+    : (Math.random() - 0.5) * 2.2;
+  currentPrice = Math.max(5, currentPrice + drift);
+
+  if (crashed && time - crashStartTime > 6) crashed = false;
+
+  bots.forEach(bot => {
+    bot.prevValue = bot.value;
+    let delta = 0;
+    const priceChangePct = drift / currentPrice;
+    if (bot.name === 'MomentumBot') delta = priceChangePct * bot.value * 3 + (Math.random()-0.5)*30;
+    if (bot.name === 'ValueBot')    delta = -priceChangePct * bot.value * 1.5 + (Math.random()-0.5)*20;
+    if (bot.name === 'PanicBot')    delta = crashed ? -Math.abs(drift)*bot.value*0.05 : (Math.random()-0.5)*15;
+    if (bot.name === 'RandomBot')   delta = (Math.random()-0.5) * 80;
+    bot.value = Math.max(0, bot.value + delta);
+  });
+
+  return { time, price: currentPrice, crashed, bots: bots.map(b => ({name:b.name, value:b.value})) };
+}
+
+let crashStartTime = -999;
+function triggerDemoCrash() {
+  crashed = true;
+  crashStartTime = time;
+}
+
+// ---- fetch real data if available, else fall back to demo ----
+async function pollData() {
+  try {
+    const res = await fetch(DATA_URL + '?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('no file');
+    const data = await res.json();
+    usingLiveData = true;
+    applyData(data);
+  } catch (e) {
+    usingLiveData = false;
+    const data = stepDemoData();
+    applyData(data);
+  }
+  updateModeBadge();
+}
+
+function applyData(data) {
+  time = data.time;
+  currentPrice = data.price;
+  crashed = !!data.crashed;
+
+  priceHistory.push(currentPrice);
+  if (priceHistory.length > MAX_HISTORY) priceHistory.shift();
+
+  data.bots.forEach(incoming => {
+    const bot = bots.find(b => b.name === incoming.name);
+    if (bot) {
+      bot.prevValue = bot.value;
+      bot.value = incoming.value;
+    }
+  });
+
+  render();
+}
+
+function updateModeBadge() {
+  const badge = document.getElementById('modeBadge');
+  if (usingLiveData) {
+    badge.textContent = 'Live data';
+    badge.className = 'badge live';
+  } else {
+    badge.textContent = 'Demo data';
+    badge.className = 'badge demo';
+  }
+}
+
+// ---- rendering ----
+const priceLabel = document.getElementById('priceLabel');
+const clockEl = document.getElementById('clock');
+const crashBanner = document.getElementById('crashBanner');
+const botList = document.getElementById('botList');
+const canvas = document.getElementById('priceChart');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 260 * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function drawPriceChart() {
+  const w = canvas.getBoundingClientRect().width;
+  const h = 260;
+  ctx.clearRect(0, 0, w, h);
+
+  if (priceHistory.length < 2) return;
+
+  const min = Math.min(...priceHistory);
+  const max = Math.max(...priceHistory);
+  const pad = (max - min) * 0.15 || 5;
+  const yMin = Math.max(0, min - pad);
+  const yMax = max + pad;
+
+  // grid lines
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid').trim();
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = (h - 20) * (i / 4) + 10;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // price line
+  const trendUp = priceHistory[priceHistory.length - 1] >= priceHistory[0];
+  ctx.strokeStyle = crashed ? '#ff4757' : (trendUp ? '#00d9a0' : '#ff8a5c');
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  priceHistory.forEach((p, i) => {
+    const x = (i / (MAX_HISTORY - 1)) * w;
+    const y = h - 10 - ((p - yMin) / (yMax - yMin || 1)) * (h - 20);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // fill under line
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, crashed ? 'rgba(255,71,87,.18)' : 'rgba(0,217,160,.15)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+function render() {
+  const priceDelta = priceHistory.length > 1
+    ? currentPrice - priceHistory[priceHistory.length - 2]
+    : 0;
+  priceLabel.textContent = '$' + currentPrice.toFixed(2);
+  priceLabel.className = 'price ' + (priceDelta >= 0 ? 'up' : 'down');
+  clockEl.textContent = 't = ' + time + 's';
+
+  crashBanner.classList.toggle('show', crashed);
+
+  const maxVal = Math.max(...bots.map(b => b.value), 1);
+  botList.innerHTML = '';
+  [...bots].sort((a,b) => b.value - a.value).forEach(bot => {
+    const pct = (bot.value / maxVal) * 100;
+    const up = bot.value >= bot.prevValue;
+    const row = document.createElement('div');
+    row.className = 'bot-row';
+    row.innerHTML = `
+      <div class="name">${bot.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%; background:${BOT_COLORS[bot.name] || '#888'}"></div>
+      </div>
+      <div class="value ${up ? 'up' : 'down'}">$${bot.value.toFixed(2)}</div>
+    `;
+    botList.appendChild(row);
+  });
+
+  resizeCanvas();
+  drawPriceChart();
+}
+
+// ---- controls ----
+document.getElementById('crashBtn').addEventListener('click', () => {
+  if (usingLiveData) {
+    // In live mode, the real crash trigger needs to come from the C++ side
+    // (e.g. it watches for a "trigger_crash.flag" file, or a key press in
+    // its own console). For now this just flags the visual state locally
+    // so you can demo the UI reaction immediately.
+    crashed = true;
+    setTimeout(() => { crashed = false; }, 6000);
+  } else {
+    triggerDemoCrash();
+  }
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  time = 0;
+  currentPrice = 100;
+  crashed = false;
+  priceHistory = [];
+  bots = BOT_ORDER.map(name => ({ name, value: 10000, prevValue: 10000 }));
+  render();
+});
+
+// ---- boot ----
+resizeCanvas();
+render();
+setInterval(pollData, POLL_MS);
+</script>
+</body>
+</html>
