@@ -1,0 +1,11 @@
+{
+  "time": 21,
+  "price": 37.2209,
+  "crashed": true,
+  "bots": [
+    { "name": "MomentumBot", "value": 97638.7 },
+    { "name": "RandomBot", "value": 99774.7 },
+    { "name": "ValueBot", "value": 99078.4 },
+    { "name": "PanicBot", "value": 100000 }
+  ]
+}
