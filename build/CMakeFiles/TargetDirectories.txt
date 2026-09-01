@@ -1,0 +1,3 @@
+C:/Users/taran/Desktop/marketmind/build/CMakeFiles/marketmind.dir
+C:/Users/taran/Desktop/marketmind/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/taran/Desktop/marketmind/build/CMakeFiles/ZERO_CHECK.dir

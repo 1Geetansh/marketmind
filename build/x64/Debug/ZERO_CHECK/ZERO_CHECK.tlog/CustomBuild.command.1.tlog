@@ -1,0 +1,10 @@
+^C:\USERS\TARAN\DESKTOP\MARKETMIND\BUILD\CMAKEFILES\A556603FABCF20F8396222C556B91448\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/taran/Desktop/marketmind -BC:/Users/taran/Desktop/marketmind/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/taran/Desktop/marketmind/build/MarketMind.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
