@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\taran\Desktop\marketmind\build\CMakeFiles\a556603fabcf20f8396222c556b91448\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{878326AD-93B0-36C8-8ECB-B5E5DD953FF5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
